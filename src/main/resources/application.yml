@@ -1,0 +1,18 @@
+server:
+  port: 8100
+  servlet:
+    context-path: /api
+spring:
+  datasource:
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/SHUEMS?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf-8}
+    username: ${MYSQL_USERNAME:shuems}
+    password: ${MYSQL_PASSWORD:shuems}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: mysql
+    open-in-view: true
+    show-sql: true
+jwt:
+  expiration: 18000
+  secret: ${JWT_SECRET:114514_1919810yiyi~yokoyiyo_pi_outone~senpai_little~sheepdirty55555555555}
