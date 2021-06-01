@@ -15,6 +15,9 @@ import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.CorsConfigurationSource
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 
 /**
@@ -22,6 +25,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * @Author: murundong
  * @Date: 2021/5/8
  **/
+
 
 @Configuration
 @EnableWebSecurity
@@ -32,7 +36,7 @@ class SecurityConfiguration : WebSecurityConfigurerAdapter() {
     lateinit var userDetailsService: UserDetailsService
 
     @Bean
-    fun UserDetailsService() : UserDetailsService {
+    fun UserDetailsService(): UserDetailsService {
         return super.userDetailsService()
     }
 
@@ -40,7 +44,7 @@ class SecurityConfiguration : WebSecurityConfigurerAdapter() {
     lateinit var jwtTokenFilter: JwtTokenFilter
 
     @Bean
-    public fun PasswordEncoderBean() : PasswordEncoder {
+    fun PasswordEncoderBean(): PasswordEncoder {
         return BCryptPasswordEncoder()
     }
 
@@ -50,25 +54,33 @@ class SecurityConfiguration : WebSecurityConfigurerAdapter() {
     }
 
     @Autowired
-    fun configureGlobal (auth: AuthenticationManagerBuilder) {
+    fun configureGlobal(auth: AuthenticationManagerBuilder) {
         auth.userDetailsService(userDetailsService)
             .passwordEncoder(PasswordEncoderBean())
     }
 
     override fun configure(http: HttpSecurity?) {
-        http!!.cors().and().csrf().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .authorizeRequests()
-                .antMatchers("/auth/**").permitAll()
-                .antMatchers("/teacher/**").hasAnyRole("TEACHER", "ADMIN")
-                .antMatchers("/student/**").hasAnyRole("STUDENT", "ADMIN")
-                .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/commmon/**").hasAnyRole("STUDENT", "ADMIN", "TEACHER")
-                .anyRequest().authenticated()
+        http!!.cors().configurationSource(corsConfigurationSource()).and().csrf().disable()
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+            .authorizeRequests()
+            .antMatchers("/auth/**").permitAll()
+            .antMatchers("/teacher/**").hasAnyAuthority("TEACHER", "ADMIN")
+            .antMatchers("/student/**").hasAnyAuthority("STUDENT", "ADMIN")
+            .antMatchers("/admin/**").hasAuthority("ADMIN")
+            .antMatchers("/commmon/**").hasAnyAuthority("STUDENT", "ADMIN", "TEACHER")
+            .anyRequest().authenticated()
 
         http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter::class.java)
 
         http.headers().cacheControl()
     }
+
+    @Bean
+    fun corsConfigurationSource(): CorsConfigurationSource? {
+        val source = UrlBasedCorsConfigurationSource()
+        source.registerCorsConfiguration("/**", CorsConfiguration().applyPermitDefaultValues())
+        return source
+    }
+
 
 }

@@ -12,13 +12,15 @@ import lombok.Data
 @Data
 class AuthResDto {
 
-    lateinit var token : String
+    lateinit var token: String
 
     var expiration: Long = 0
 
-    lateinit var name : String
+    lateinit var id: String
 
-    lateinit var id : String
+    lateinit var uuid: String
 
-    lateinit var role : UserRole
+    lateinit var role: UserRole
+
+    lateinit var name: String
 }

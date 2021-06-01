@@ -1,8 +1,6 @@
 package com.example.shu_ems_server.dto.auth
 
 import lombok.Data
-import org.jetbrains.annotations.NotNull
-
 /**
  * @Description:
  * @Author: murundong
@@ -12,7 +10,9 @@ import org.jetbrains.annotations.NotNull
 @Data
 class AuthReqDto {
 
-    lateinit var username : String
+    lateinit var username: String
 
-    lateinit var password : String
+    lateinit var password: String
+
+    lateinit var role: String
 }
