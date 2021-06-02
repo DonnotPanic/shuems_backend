@@ -4,6 +4,7 @@ import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.entity.sequenceOf
 import org.ktorm.schema.Table
+import org.ktorm.schema.int
 import org.ktorm.schema.varchar
 
 /**
@@ -11,16 +12,16 @@ import org.ktorm.schema.varchar
  * @Author: murundong
  * @Date: 2021/5/27
  **/
-interface Enroll : Entity<Enroll> {
-    companion object : Entity.Factory<Enroll>()
+interface Selection : Entity<Selection> {
+    companion object : Entity.Factory<Selection>()
 
     var student: Student
     var open: Open
 }
 
-object Enrolls : Table<Enroll>("enroll") {
+object Selections : Table<Selection>("selection") {
     val xh = varchar("xh").primaryKey().references(Students) { it.student }
-    val openId = varchar("open_id").primaryKey().references(Opens) { it.open }
+    val openId = int("open_id").primaryKey().references(Opens) { it.open }
 }
 
-val Database.enrolls get() = this.sequenceOf(Enrolls)
+val Database.selections get() = this.sequenceOf(Selections)

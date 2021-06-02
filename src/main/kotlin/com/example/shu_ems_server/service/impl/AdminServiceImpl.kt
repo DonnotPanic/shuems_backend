@@ -2,14 +2,19 @@ package com.example.shu_ems_server.service.impl
 
 import com.example.shu_ems_server.dto.admin.*
 import com.example.shu_ems_server.dto.auth.AddUserDto
+import com.example.shu_ems_server.dto.teacher.DeleteOpenCourseReqDto
+import com.example.shu_ems_server.enums.Season
+import com.example.shu_ems_server.enums.SemesterEnum
 import com.example.shu_ems_server.enums.UserRole
 import com.example.shu_ems_server.model.*
 import com.example.shu_ems_server.service.AdminService
 import com.example.shu_ems_server.service.AuthService
 import org.ktorm.database.Database
-import org.ktorm.dsl.*
-import org.ktorm.entity.add
-import org.ktorm.entity.find
+import org.ktorm.dsl.and
+import org.ktorm.dsl.asc
+import org.ktorm.dsl.desc
+import org.ktorm.dsl.eq
+import org.ktorm.entity.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -26,32 +31,20 @@ class AdminServiceImpl
     val database: Database,
     val authService: AuthService
 ) : AdminService {
-    override fun getProfile(id: String): AdminResDto {
-        val res = AdminResDto()
-        res.id = id
-        val admin = database.admins.find { it.userId eq id }
-        res.name = admin!!.name
-        res.gender = admin.gender.toString()
-        res.tel = admin.tel
-        return res
-    }
 
     override fun getStudentsList(): StudentlistResDto {
         val res = StudentlistResDto()
-        res.value = database.from(Students)
-            .leftJoin(Departments, on = Students.yxh eq Departments.yxh)
-            .select()
-            .orderBy(Students.xh.asc())
-            .map { row ->
+        res.value = database.students.sortedBy { it.xh.asc() }.toList()
+            .map { student ->
                 StudentResDto(
-                    xh = row[Students.xh],
-                    name = row[Students.name],
-                    gender = row[Students.gender],
-                    birth = row[Students.birth],
-                    jg = row[Students.jg],
-                    tel = row[Students.tel],
-                    status = row[Students.status],
-                    departmentName = row[Departments.name]
+                    xh = student.xh,
+                    name = student.name,
+                    gender = student.gender,
+                    birth = student.birth,
+                    jg = student.jg,
+                    tel = student.tel,
+                    status = student.status,
+                    departmentName = student.department.name
                 )
             }
         return res
@@ -117,20 +110,17 @@ class AdminServiceImpl
 
     override fun getTeachersList(): TeacherlistResDto {
         val res = TeacherlistResDto()
-        res.value = database.from(Teachers)
-            .leftJoin(Departments, on = Teachers.yxh eq Departments.yxh)
-            .select()
-            .orderBy(Teachers.gh.asc())
-            .map { row ->
+        res.value = database.teachers.sortedBy { it.gh.asc() }.toList()
+            .map { teacher ->
                 TeacherResDto(
-                    gh = row[Teachers.gh],
-                    name = row[Teachers.name],
-                    gender = row[Teachers.gender],
-                    birth = row[Teachers.birth],
-                    jg = row[Teachers.jg],
-                    tel = row[Teachers.tel],
-                    title = row[Teachers.title],
-                    departmentName = row[Departments.name]
+                    gh = teacher.gh,
+                    name = teacher.name,
+                    gender = teacher.gender,
+                    birth = teacher.birth,
+                    jg = teacher.jg,
+                    tel = teacher.tel,
+                    title = teacher.title,
+                    departmentName = teacher.department.name
                 )
             }
         return res
@@ -194,25 +184,6 @@ class AdminServiceImpl
         return ResponseEntity.ok("删除成功")
     }
 
-    override fun getCoursesList(): CourselistResDto {
-        val res = CourselistResDto()
-        res.value = database.from(Courses)
-            .leftJoin(Departments, on = Courses.yxh eq Departments.yxh)
-            .select()
-            .orderBy(Courses.kh.asc())
-            .map { row ->
-                CourseResDto(
-                    kh = row[Courses.kh],
-                    name = row[Courses.name],
-                    credit = row[Courses.credit],
-                    rate = row[Courses.usualFinalRate],
-                    departmentName = row[Departments.name],
-                    description = row[Courses.description]
-                )
-            }
-        return res
-    }
-
     override fun addCourses(courselistReqDto: CourselistReqDto): ResponseEntity<String> {
         val courseList = courselistReqDto.value
         val errors: MutableCollection<String> = ArrayList()
@@ -252,4 +223,111 @@ class AdminServiceImpl
         return ResponseEntity.ok("删除成功")
     }
 
+    override fun addDepartments(departmentlistReqDto: DepartmentlistReqDto): ResponseEntity<String> {
+        val departmentList = departmentlistReqDto.value
+        val errors: MutableCollection<String> = ArrayList()
+        departmentList.forEach(fun(departmentReq: DepartmentReqDto) {
+            val existsDepartment = database.departments.find { it.yxh eq departmentReq.yxh }
+            val department = Department()
+            department.yxh = departmentReq.yxh
+            department.name = departmentReq.name
+            department.addr = departmentReq.addr
+            department.tel = departmentReq.tel
+
+            if (existsDepartment == null) {
+                database.departments.add(department)
+            } else {
+                errors.add(departmentReq.yxh)
+            }
+        })
+        if (!errors.isEmpty())
+            return ResponseEntity.badRequest().body("已有学院号 $errors")
+        return ResponseEntity.ok("添加成功")
+    }
+
+    override fun deleteDepartment(yxh: String): ResponseEntity<String> {
+        val course = database.courses.find { it.yxh eq yxh }
+        course?.delete()
+        return ResponseEntity.ok("删除成功")
+    }
+
+    override fun getSemesters(): SemesterlistResDto {
+        val res = SemesterlistResDto()
+        res.value = database.semesters.sortedBy { it.xq.desc() }.toList()
+        return res
+    }
+
+    override fun updateSemester(updateSemesterReqDto: UpdateSemesterReqDto): ResponseEntity<String> {
+        val semester =
+            database.semesters.find { it.xq eq updateSemesterReqDto.xq } ?: return ResponseEntity.badRequest()
+                .body("找不到学期${updateSemesterReqDto.xq}")
+        if (semester.status == "C") {
+            return ResponseEntity.badRequest().body("成绩已发布的学期状态无法更改")
+        }
+        if (semester.status == "O" && updateSemesterReqDto.status != "O") {
+            val opens = database.opens.filter { it.xq eq updateSemesterReqDto.xq }.toList()
+            opens.forEach { it ->
+                val openId = it.id
+                val capacity = it.capacity
+                val selections = database.selections.filter { it.openId eq openId }
+                    .sortedBy { it.xh.desc() }.take(capacity).toList()
+                database.selections.removeIf { it.openId eq openId }
+                selections.forEach {
+                    val enroll = Enroll()
+                    enroll.open = it.open
+                    enroll.student = it.student
+                    database.enrolls.add(enroll)
+                }
+            }
+        }
+        if (semester.status != updateSemesterReqDto.status) {
+            semester.status = updateSemesterReqDto.status
+            semester.flushChanges()
+        }
+        return ResponseEntity.ok("修改成功")
+    }
+
+    override fun addSemester(addSemesterReqDto: AddSemesterReqDto): ResponseEntity<String> {
+        val year = addSemesterReqDto.year.toLocalDate().year
+        val season = Season.valueOf(addSemesterReqDto.season)
+        val semesterEnum = SemesterEnum(year, season)
+        val semester = Semester()
+        semester.xq = semesterEnum.toString()
+        semester.status = "O"
+        val existSemester = database.semesters.find { it.xq eq semester.xq }
+        return if (existSemester == null) {
+            database.semesters.add(semester)
+            ResponseEntity.ok("添加成功")
+        } else {
+            ResponseEntity.badRequest().body("该学期已存在")
+        }
+    }
+
+    override fun deleteSemester(xq: String): ResponseEntity<String> {
+        val semester = database.semesters.find { it.xq eq xq }
+        semester?.delete()
+        return ResponseEntity.ok("删除成功")
+    }
+
+    override fun deleteOpenCourse(
+        deleteOpenCourseReqDto: DeleteOpenCourseReqDto,
+        teacherId: String
+    ): ResponseEntity<String> {
+        val teacher = database.teachers.find { it.gh eq teacherId }!!
+        val gh = teacher.gh
+        database.opens.removeIf {
+            (it.gh eq gh) and (it.kh eq deleteOpenCourseReqDto.kh) and (it.xq eq deleteOpenCourseReqDto.xq)
+        }
+        return ResponseEntity.ok("删除成功")
+    }
+
+    override fun setCourseTime(setCourseTimeReqDto: SetCourseTimeReqDto): ResponseEntity<String> {
+        val open =
+            database.opens.find { (it.kh eq setCourseTimeReqDto.kh) and (it.gh eq setCourseTimeReqDto.gh) and (it.xq eq setCourseTimeReqDto.xq) }
+                ?: return ResponseEntity.badRequest()
+                    .body("所找的开课（${setCourseTimeReqDto.gh}, ${setCourseTimeReqDto.kh}, ${setCourseTimeReqDto.xq}）不存在")
+        open.courseTime = setCourseTimeReqDto.courseTime
+        database.opens.update(open)
+        return ResponseEntity.ok("修改成功")
+    }
 }

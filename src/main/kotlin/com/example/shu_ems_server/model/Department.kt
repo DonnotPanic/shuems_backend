@@ -18,7 +18,7 @@ interface Department : Entity<Department> {
     var yxh: String
     var name: String
     var addr: String
-    var tel: String
+    var tel: String?
 }
 
 object Departments : Table<Department>("department") {

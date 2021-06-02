@@ -17,7 +17,7 @@ interface Grade : Entity<Grade> {
     companion object : Entity.Factory<Grade>()
 
     var student: Student
-    var xq: String
+    var semester: Semester
     var course: Course
     var usualGrade: Int?
     var finalGrade: Int?
@@ -38,7 +38,7 @@ interface Grade : Entity<Grade> {
 
 object Grades : Table<Grade>("grade") {
     val xh = varchar("xh").primaryKey().references(Students) { it.student }
-    val xq = varchar("xq").primaryKey().bindTo { it.xq }
+    val xq = varchar("xq").primaryKey().references(Semesters) { it.semester }
     val kh = varchar("kh").primaryKey().references(Courses) { it.course }
     val usualGrade = int("usual_grade").bindTo { it.usualGrade }
     val finalGrade = int("final_grade").bindTo { it.finalGrade }

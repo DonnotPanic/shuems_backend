@@ -1,4 +1,4 @@
-package com.example.shu_ems_server.dto.admin
+package com.example.shu_ems_server.dto.teacher
 
 /**
  * @Description:

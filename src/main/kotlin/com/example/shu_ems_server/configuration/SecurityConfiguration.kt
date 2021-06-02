@@ -64,6 +64,7 @@ class SecurityConfiguration : WebSecurityConfigurerAdapter() {
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
             .authorizeRequests()
             .antMatchers("/auth/**").permitAll()
+            .antMatchers("/teacher/opens").hasAnyAuthority("STUDENT", "ADMIN", "TEACHER")
             .antMatchers("/teacher/**").hasAnyAuthority("TEACHER", "ADMIN")
             .antMatchers("/student/**").hasAnyAuthority("STUDENT", "ADMIN")
             .antMatchers("/admin/**").hasAuthority("ADMIN")

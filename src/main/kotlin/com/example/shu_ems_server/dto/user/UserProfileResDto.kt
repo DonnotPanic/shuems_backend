@@ -1,4 +1,4 @@
-package com.example.shu_ems_server.dto.admin
+package com.example.shu_ems_server.dto.user
 
 import lombok.Data
 
@@ -8,7 +8,7 @@ import lombok.Data
  * @Date: 2021/5/30
  **/
 @Data
-class AdminResDto {
+class UserProfileResDto {
 
     lateinit var id: String
 
@@ -17,4 +17,8 @@ class AdminResDto {
     lateinit var gender: String
 
     lateinit var tel: String
+
+    lateinit var role: String
+
+    var departmentName: String? = null
 }

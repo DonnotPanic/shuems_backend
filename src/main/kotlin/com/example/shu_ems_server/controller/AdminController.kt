@@ -1,12 +1,12 @@
 package com.example.shu_ems_server.controller
 
 import com.example.shu_ems_server.dto.admin.*
+import com.example.shu_ems_server.dto.teacher.DeleteOpenCourseReqDto
 import com.example.shu_ems_server.service.AdminService
 import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
@@ -21,13 +21,6 @@ import org.springframework.web.bind.annotation.*
 class AdminController
 @Autowired constructor(val adminService: AdminService) {
     val log = LoggerFactory.getLogger(this.javaClass)
-
-    @GetMapping("/profile")
-    fun getProfile(): AdminResDto {
-        val principal = SecurityContextHolder.getContext().authentication.principal
-        val username = principal.toString()
-        return adminService.getProfile(username)
-    }
 
     @GetMapping("/teachers")
     fun getTeachersList(): TeacherlistResDto {
@@ -59,18 +52,59 @@ class AdminController
         return adminService.deleteStudent(deleteStudentReqDto.xh)
     }
 
-    @GetMapping("/courses")
-    fun getcoursesList(): CourselistResDto {
-        return adminService.getCoursesList()
-    }
-
     @PostMapping("/addCourses")
-    fun addcourses(@RequestBody @Validated courselistReqDto: CourselistReqDto): ResponseEntity<String> {
+    fun addCourses(@RequestBody @Validated courselistReqDto: CourselistReqDto): ResponseEntity<String> {
         return adminService.addCourses(courselistReqDto)
     }
 
     @PostMapping("/deleteCourse")
-    fun deletecourse(@RequestBody @Validated deletecourseReqDto: DeleteCourseReqDto): ResponseEntity<String> {
-        return adminService.deleteCourse(deletecourseReqDto.kh)
+    fun deleteCourse(@RequestBody @Validated deleteCourseReqDto: DeleteCourseReqDto): ResponseEntity<String> {
+        return adminService.deleteCourse(deleteCourseReqDto.kh)
     }
+
+    @PostMapping("/addDepartments")
+    fun addDepartments(@RequestBody @Validated departmentlistReqDto: DepartmentlistReqDto): ResponseEntity<String> {
+        return adminService.addDepartments(departmentlistReqDto)
+    }
+
+    @PostMapping("/deleteDepartment")
+    fun deleteDepartment(@RequestBody @Validated deleteDepartmentReqDto: DeleteDepartmentReqDto): ResponseEntity<String> {
+        return adminService.deleteDepartment(deleteDepartmentReqDto.yxh)
+    }
+
+    @GetMapping("/semesters")
+    fun getSemesters(): SemesterlistResDto {
+        return adminService.getSemesters()
+    }
+
+    @PostMapping("/updateSemester")
+    fun updateSemester(@RequestBody @Validated updateSemesterReqDto: UpdateSemesterReqDto): ResponseEntity<String> {
+        return adminService.updateSemester(updateSemesterReqDto)
+    }
+
+    @PostMapping("/addSemester")
+    fun addSemester(@RequestBody @Validated addSemesterReqDto: AddSemesterReqDto): ResponseEntity<String> {
+        return adminService.addSemester(addSemesterReqDto)
+    }
+
+    @PostMapping("/deleteSemester")
+    fun deleteSemester(@RequestBody @Validated deleteSemesterReqDto: DeleteSemesterReqDto): ResponseEntity<String> {
+        return adminService.deleteSemester(deleteSemesterReqDto.xq)
+    }
+
+    @PostMapping("/deleteOpenCourse/{teacherId}")
+    fun deleteOpenCourse(
+        @RequestBody @Validated deleteOpenCourseReqDto: DeleteOpenCourseReqDto,
+        @PathVariable teacherId: String
+    ): ResponseEntity<String> {
+        return adminService.deleteOpenCourse(deleteOpenCourseReqDto, teacherId)
+    }
+
+    @PostMapping("/setCourseTime")
+    fun setCourseTime(@RequestBody @Validated setCourseTimeReqDto: SetCourseTimeReqDto): ResponseEntity<String> {
+        return adminService.setCourseTime(setCourseTimeReqDto)
+    }
+
+//    @PostMapping("/expandCourse")
+//    fun expandCourse(@RequestBody @Validated)
 }
